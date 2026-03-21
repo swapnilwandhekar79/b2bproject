@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body {font-family:Arial;text-align:center;background:#667eea;color:white}
+.box {margin-top:100px}
+input,button {padding:10px;margin:5px;width:200px}
+button {background:black;color:white}
+</style>
+</head>
+
+<body>
+<div class="box">
+<h2>🔐 Shop Login</h2>
+
+<input id="username" placeholder="Username"><br>
+<input id="password" type="password" placeholder="Password"><br>
+
+<button onclick="signup()">Signup</button>
+<button onclick="login()">Login</button>
+
+<p id="msg"></p>
+</div>
+
+<script>
+
+const API = "https://b2b-app.onrender.com"; // 🔥 YOUR BACKEND
+
+function signup(){
+  fetch(API+"/signup",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      username:username.value,
+      password:password.value
+    })
+  })
+  .then(res=>res.json())
+  .then(d=>msg.innerText=d.message);
+}
+
+function login(){
+  fetch(API+"/login",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      username:username.value,
+      password:password.value
+    })
+  })
+  .then(res=>res.json())
+  .then(d=>{
+    msg.innerText=d.message;
+    if(d.message.includes("successful")){
+      localStorage.setItem("user", username.value);
+      window.location.href="dashboard.html";
+    }
+  });
+}
+</script>
+</body>
+</html>
