@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Login</title>
+
+<style>
+body {
+  font-family: Arial;
+  background: linear-gradient(135deg,#667eea,#764ba2);
+  text-align: center;
+  color: white;
+}
+.box {
+  margin-top: 100px;
+}
+input,button {
+  padding: 10px;
+  margin: 8px;
+  width: 220px;
+  border-radius: 6px;
+  border: none;
+}
+button {
+  background: black;
+  color: white;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+<h2>🔐 Shop Login</h2>
+
+<input id="username" placeholder="Username"><br>
+<input id="password" type="password" placeholder="Password"><br>
+
+<button onclick="signup()">Signup</button>
+<button onclick="login()">Login</button>
+
+<p id="msg"></p>
+</div>
+
+<script>
+
+const API = "https://b2b-backend.onrender.com"; // 🔥 apna backend url daal
+
+function signup(){
+  fetch(API+"/signup",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      username:username.value,
+      password:password.value
+    })
+  })
+  .then(res=>res.json())
+  .then(d=>msg.innerText=d.message);
+}
+
+function login(){
+  fetch(API+"/login",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      username:username.value,
+      password:password.value
+    })
+  })
+  .then(res=>res.json())
+  .then(d=>{
+    msg.innerText=d.message;
+    if(d.message.includes("successful")){
+      localStorage.setItem("user", username.value);
+      window.location.href="dashboard.html";
+    }
+  });
+}
+
+</script>
+</body>
+</html>

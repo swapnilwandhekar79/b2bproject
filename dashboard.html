@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body {margin:0;font-family:Arial;background:#f4f6f9}
+header {background:#667eea;color:white;padding:15px;text-align:center}
+.container {padding:15px}
+.card {background:white;padding:15px;border-radius:12px;margin-bottom:15px}
+input,select {width:100%;padding:10px;margin:8px 0}
+button {width:100%;padding:10px;background:#667eea;color:white;border:none}
+</style>
+</head>
+
+<body>
+
+<header>📊 Welcome <span id="shop"></span></header>
+
+<div class="container">
+
+<div class="card">
+<input id="customer" placeholder="Customer Name">
+<select id="product"></select>
+<input id="price" readonly>
+<input id="qty" placeholder="Quantity">
+<button onclick="create()">Generate Bill</button>
+
+<div id="billBox"></div>
+</div>
+
+<div class="card">
+<p>Total Orders: <span id="orders">0</span></p>
+<p>Total Revenue: ₹<span id="revenue">0</span></p>
+</div>
+
+<div class="card"><canvas id="lineChart"></canvas></div>
+<div class="card"><canvas id="barChart"></canvas></div>
+<div class="card"><canvas id="pieChart"></canvas></div>
+
+</div>
+
+<script>
+
+const API = "https://b2b-backend.onrender.com"; // 🔥 same backend
+
+shop.innerText = localStorage.getItem("user");
+
+// PRODUCTS LOAD
+async function loadProducts(){
+  let res = await fetch(API+"/products");
+  let data = await res.json();
+
+  product.innerHTML = data.map(p =>
+    `<option value="${p.name}" data-price="${p.price}">
+      ${p.name}
+    </option>`
+  );
+  setPrice();
+}
+
+function setPrice(){
+  price.value = product.options[product.selectedIndex]
+    .getAttribute("data-price");
+}
+product.onchange = setPrice;
+
+// BILL CREATE
+function create(){
+  let total = qty.value * price.value;
+
+  billBox.innerHTML = `
+    <p>${customer.value} - ₹${total}</p>
+    <button onclick="save()">Save Order</button>
+  `;
+
+  window.current = {
+    customerName:customer.value,
+    productName:product.value,
+    quantity:qty.value,
+    totalPrice:total
+  };
+}
+
+// SAVE
+function save(){
+  fetch(API+"/order",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      ...window.current,
+      user:localStorage.getItem("user")
+    })
+  }).then(()=>loadData());
+}
+
+// ANALYTICS
+async function loadData(){
+  let res = await fetch(API+"/orders/"+localStorage.getItem("user"));
+  let data = await res.json();
+
+  orders.innerText = data.length;
+
+  let total=0, productStats={}, daily={};
+
+  data.forEach(o=>{
+    total += o.totalPrice;
+
+    productStats[o.productName] =
+      (productStats[o.productName] || 0) + o.quantity;
+
+    let day = new Date(
+      parseInt(o._id.substring(0,8),16)*1000
+    ).toLocaleDateString();
+
+    daily[day] = (daily[day] || 0) + o.totalPrice;
+  });
+
+  revenue.innerText = total;
+
+  new Chart(lineChart,{
+    type:"line",
+    data:{labels:Object.keys(daily),
+    datasets:[{data:Object.values(daily)}]}
+  });
+
+  new Chart(barChart,{
+    type:"bar",
+    data:{labels:Object.keys(productStats),
+    datasets:[{data:Object.values(productStats)}]}
+  });
+
+  new Chart(pieChart,{
+    type:"pie",
+    data:{labels:Object.keys(productStats),
+    datasets:[{data:Object.values(productStats)}]}
+  });
+}
+
+// INIT
+loadProducts();
+loadData();
+
+</script>
+</body>
+</html>
