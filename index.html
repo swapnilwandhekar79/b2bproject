@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>SmartShop Pro</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+
+<style>
+body{
+font-family:Arial;
+background:linear-gradient(45deg,#667eea,#764ba2);
+text-align:center;
+padding-top:100px;
+color:white;
+}
+input,button{
+width:80%;
+padding:12px;
+margin:10px;
+border:none;
+border-radius:8px;
+}
+button{
+background:black;
+color:white;
+}
+</style>
+
+</head>
+
+<body>
+
+<h1>🛍️ SmartShop Pro</h1>
+
+<input id="username" placeholder="Username">
+<input id="password" type="password" placeholder="Password">
+
+<button onclick="signup()">Signup</button>
+<button onclick="login()">Login</button>
+
+<script>
+const API="https://b2b-backend-6nze.onrender.com";
+
+async function signup(){
+let res=await fetch(API+"/signup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:username.value,password:password.value})});
+let data=await res.json();
+alert(data.message);
+}
+
+async function login(){
+let res=await fetch(API+"/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:username.value,password:password.value})});
+let data=await res.json();
+
+if(data.message.includes("successful")){
+localStorage.setItem("user",username.value);
+window.location="dashboard.html";
+}else alert(data.message);
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Dashboard</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body {margin:0;font-family:'Segoe UI';background:#f4f6f9;}
+.header {background:#667eea;color:white;padding:15px;text-align:center;}
+.container {padding:10px;padding-bottom:80px;}
+
+.card {
+background:white;
+padding:15px;
+margin:10px 0;
+border-radius:10px;
+}
+
+input,select,button {
+width:100%;
+padding:10px;
+margin-top:8px;
+}
+
+button {
+background:#667eea;
+color:white;
+border:none;
+border-radius:8px;
+}
+
+.stats {
+display:flex;
+flex-wrap:wrap;
+}
+
+.stat-box {
+width:48%;
+margin:1%;
+background:#667eea;
+color:white;
+padding:10px;
+text-align:center;
+border-radius:8px;
+}
+
+@media(min-width:768px){
+.stat-box{width:23%;}
+.container{width:80%;margin:auto;}
+input,select{width:auto;}
+}
+
+.bottom-nav {
+position:fixed;
+bottom:0;
+width:100%;
+background:white;
+display:flex;
+justify-content:space-around;
+padding:10px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="header">🛍️ SmartShop Pro</div>
+
+<div class="container">
+
+<div class="stats">
+<div class="stat-box">Sales <span id="sales">0</span></div>
+<div class="stat-box">Orders <span id="orders">0</span></div>
+<div class="stat-box">Customers <span id="customers">0</span></div>
+<div class="stat-box">Profit <span id="profit">0</span></div>
+</div>
+
+<div class="card">
+<h3>Billing</h3>
+
+<input id="customer" placeholder="Customer">
+
+<select id="product">
+<option>Shirt</option>
+<option>Pant</option>
+<option>Saree</option>
+<option>Kurti</option>
+</select>
+
+<input id="qty" placeholder="Qty">
+<input id="price" placeholder="Price">
+
+<button onclick="addItem()">Add</button>
+
+<button onclick="finalBill()">Generate Bill</button>
+</div>
+
+<div class="card">
+<canvas id="chart"></canvas>
+</div>
+
+</div>
+
+<div class="bottom-nav">
+<div onclick="alert('Billing')">🧾</div>
+<div onclick="alert('Inventory')">📦</div>
+<div onclick="alert('Analytics')">📊</div>
+</div>
+
+<script>
+
+const API="https://b2b-backend-6nze.onrender.com";
+
+let cart=[];
+
+function addItem(){
+let p=product.value;
+let q=Number(qty.value);
+let pr=Number(price.value);
+
+cart.push({p,q,pr,total:q*pr});
+}
+
+function finalBill(){
+let total=0;
+cart.forEach(i=>total+=i.total);
+
+alert("Total ₹"+total);
+
+cart.forEach(i=>{
+fetch(API+"/order",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+user:localStorage.getItem("user"),
+customer:customer.value,
+product:i.p,
+qty:i.q,
+price:i.pr,
+total:i.total,
+date:new Date().toLocaleDateString()
+})
+});
+});
+
+cart=[];
+loadData();
+}
+
+async function loadData(){
+let res=await fetch(API+"/orders/"+localStorage.getItem("user"));
+let data=await res.json();
+
+let total=0, cust={};
+
+data.forEach(o=>{
+total+=o.total;
+cust[o.customer]=1;
+});
+
+sales.innerText=total;
+orders.innerText=data.length;
+customers.innerText=Object.keys(cust).length;
+profit.innerText=Math.floor(total*0.2);
+
+new Chart(chart,{
+type:"bar",
+data:{labels:["Sales"],datasets:[{data:[total]}]}
+});
+}
+
+loadData();
+
+</script>
+
+</body>
+</html>
